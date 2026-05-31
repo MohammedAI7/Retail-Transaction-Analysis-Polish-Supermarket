@@ -1,76 +1,174 @@
 # Findings & Recommendations
+
 ## Retail Transaction Analysis — Polish Supermarket
 
-**Data:** 10,000+ point-of-sale transactions · January–April 2019  
-**Source:** MDPI Open Dataset · [https://www.mdpi.com/2306-5729/4/2/67/htm](https://www.mdpi.com/2306-5729/4/2/67/htm)
+**Data:** Point-of-Sale Transactions & Operator Logs (January–April 2019)
 
 ---
 
-## Finding 1 — Card users spend more than cash users
+## Finding 1 — Card transactions generate higher revenue per purchase
 
-Customers paying exclusively by card averaged a higher spend per transaction than customers paying exclusively by cash.
+Analysis of payment methods shows:
 
-**Business implication:**
-Investing in faster, more reliable card payment infrastructure at checkouts is justified. Card users are higher-value customers per visit. Marketing promotions that incentivize card payment (e.g. loyalty points on card spend) could increase average transaction value across the store.
+| Payment Method | Transactions | Average Transaction Value |
+| -------------- | -----------: | ------------------------: |
+| Cash           |       83,779 |                     58.72 |
+| Card           |       78,246 |                     87.56 |
+| Unknown        |        1,244 |                     70.57 |
 
----
+Although cash transactions occur slightly more frequently, card transactions generate significantly higher revenue per purchase.
 
-## Finding 2 — Thursday to Saturday drives the majority of revenue
+### Business Implication
 
-Daily analysis across 2019 shows a consistent pattern every week:
+* Card-paying customers spend approximately **49% more per transaction** than cash-paying customers.
+* Investment in reliable card payment infrastructure is justified.
+* Promotions encouraging digital payments may increase overall transaction value.
 
-| Day group | Transactions | Revenue vs Mon–Wed |
-|---|---|---|
-| Monday – Wednesday | Baseline | Baseline |
-| Thursday – Saturday | ~25% higher | ~40% higher |
-| Sunday (when open) | Significantly lower | Significantly lower |
+### Recommendation
 
-**Business implication:**
-Staff scheduling should be heavily weighted toward Thursday, Friday, and Saturday. Scheduling equal headcount across all 7 days means the store is overstaffed early in the week and potentially understaffed on peak days. Rebalancing shifts to match demand patterns would improve both service quality and labor efficiency.
-
----
-
-## Finding 3 — Sunday closures have zero revenue impact
-
-Poland's 2018 Sunday trading ban restricted which Sundays stores could open. Comparing two complete weeks — one with Sunday trading (Week 8) and one without (Week 14):
-
-| Week | Sunday open? | Total weekly revenue |
-|---|---|---|
-| Week 8 | Yes | PLN 1,700,000 |
-| Week 14 | No | PLN 1,700,000 |
-
-Weekly revenue was identical. Customers simply moved their Sunday shopping to the preceding Saturday. The store generated no additional revenue by staying open on Sunday.
-
-**Business implication:**
-Opening on Sundays is a cost with no revenue return.
+* Prioritize fast and reliable card payment systems.
+* Consider loyalty rewards or promotional campaigns targeted at card users.
+* Investigate the 1,244 transactions with unknown payment methods to improve data quality.
 
 ---
 
-## Recommendation — Close on Sundays
+## Finding 2 — Revenue peaks toward the end of the week
 
-Based on the data, the recommendation is to close all stores on Sundays and move to a 6-day operating model.
+Revenue analysis by day shows a clear pattern:
 
-**Projected savings per Sunday:**
+### Week 8
 
-| Cost item | Estimate |
-|---|---|
-| Staff (avg 19 operators × 8 hrs × hourly rate) | Variable by rate |
-| Energy and utilities | Additional saving |
-| Checkout system and operational overhead | Additional saving |
+| Day       | Revenue |
+| --------- | ------: |
+| Monday    | 193,133 |
+| Tuesday   | 170,242 |
+| Wednesday | 181,630 |
+| Thursday  | 298,613 |
+| Friday    | 330,429 |
+| Saturday  | 369,413 |
+| Sunday    | 143,025 |
 
-**Revenue risk:** None — weekly revenue remained flat during non-trading Sundays in the dataset.
+### Week 14
 
-**Risk to consider:** Short shelf-life perishable goods scheduled for Sunday sale may need to be redistributed across Saturday and Monday. This is an operational adjustment, not a financial barrier.
+| Day       | Revenue |
+| --------- | ------: |
+| Monday    | 200,771 |
+| Tuesday   | 177,956 |
+| Wednesday | 176,565 |
+| Thursday  | 342,444 |
+| Friday    | 362,679 |
+| Saturday  | 430,575 |
 
-**Secondary benefit:** Redeploying Sunday staff hours to Thursday–Saturday peak shifts would improve customer service on the days that matter most for revenue.
+The strongest revenue days are consistently:
+
+1. Saturday
+2. Friday
+3. Thursday
+
+### Business Implication
+
+Customer demand is concentrated toward the end of the week.
+
+### Recommendation
+
+* Allocate more staff to Thursday–Saturday shifts.
+* Schedule inventory replenishment before peak trading days.
+* Use Monday–Wednesday for operational activities such as training, maintenance, and stock management.
 
 ---
 
-## Summary
+## Finding 3 — Sunday trading contributes little additional weekly revenue
 
-| Question | Answer |
-|---|---|
-| Do card users spend more? | Yes — card transactions average higher spend |
-| Which days are busiest? | Thursday, Friday, Saturday consistently |
-| Does Sunday trading add revenue? | No — weekly revenue identical with or without |
-| Should stores close on Sundays? | Yes — cost saving with no revenue impact |
+Sunday trading occurred only in:
+
+| Week Number |
+| ----------- |
+| 8           |
+| 13          |
+
+Comparing a trading week (Week 8) with a non-trading week (Week 14):
+
+### Week 8 Revenue
+
+Total weekly revenue ≈ **1.69 million**
+
+### Week 14 Revenue
+
+Total weekly revenue ≈ **1.69 million**
+
+Despite Week 8 including Sunday trading, overall weekly revenue remained very similar.
+
+A particularly important observation is:
+
+| Week    | Saturday Revenue |
+| ------- | ---------------: |
+| Week 8  |          369,413 |
+| Week 14 |          430,575 |
+
+When Sunday trading was unavailable, Saturday revenue increased substantially.
+
+### Business Implication
+
+This suggests customers may be shifting purchases to Saturday rather than generating entirely new sales on Sunday.
+
+### Recommendation
+
+Conduct further analysis using additional weeks, but the current evidence suggests Sunday opening provides limited incremental revenue.
+
+---
+
+## Finding 4 — Sunday staffing requirements are relatively low
+
+Operator log analysis shows:
+
+| Sunday         | Operators Working |
+| -------------- | ----------------: |
+| Week 8 Sunday  |                18 |
+| Week 13 Sunday |                20 |
+
+Average Sunday staffing requirement:
+
+**19 operators per Sunday**
+
+### Business Implication
+
+Opening on Sundays requires additional labor resources even though weekly revenue appears largely unchanged.
+
+### Recommendation
+
+If Sunday trading is discontinued, staffing costs associated with approximately 19 operators per Sunday could be avoided or reassigned to peak trading days.
+
+---
+
+# Final Recommendation
+
+Based on the available data:
+
+### Continue prioritizing card payments
+
+Card transactions generate substantially higher revenue per purchase.
+
+### Focus staffing and inventory on Thursday–Saturday
+
+These days consistently generate the highest revenue.
+
+### Evaluate the necessity of Sunday trading
+
+Current evidence suggests that Sunday opening does not materially increase weekly revenue and may simply redistribute demand across the week.
+
+### Reallocate Sunday labor
+
+If Sunday closures continue, staffing resources can be shifted toward Friday and Saturday, where customer demand is strongest.
+
+---
+
+## Executive Summary
+
+| Business Question                                          | Conclusion                                                   |
+| ---------------------------------------------------------- | ------------------------------------------------------------ |
+| Do card users spend more?                                  | Yes. Card transactions average 87.56 vs 58.72 for cash.      |
+| Which days generate the most revenue?                      | Thursday, Friday, and especially Saturday.                   |
+| Does Sunday trading significantly increase weekly revenue? | Evidence suggests little to no meaningful increase.          |
+| How many operators are required on Sundays?                | Approximately 19 operators on average.                       |
+| Should Sunday staffing be reconsidered?                    | Yes, staffing may be better allocated to higher-demand days. |
+
