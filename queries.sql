@@ -11,14 +11,20 @@
 
 CREATE TABLE IF NOT EXISTS pos_transactions (
     id INT,
+    Workstation_Group_ID,
+    begin_date_time DATETIME,
     end_date_time DATETIME,
-    amount DECIMAL(10,2),
+    operators_ID,
     basket_size INT,
     t_cash BOOLEAN,
     t_card BOOLEAN
+    amount DECIMAL(10,2),
 );
 
 CREATE TABLE IF NOT EXISTS pos_operator_logs (
+    id INT,
+    Workstation_Group_ID INT,
+    Workstation_ID INT,
     operator_id INT,
     begin_date_time DATETIME
 );
@@ -39,12 +45,6 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
 
--- Add indexes to improve query performance on date and amount columns
-CREATE INDEX idx_date_amount
-ON pos_transactions(end_date_time, amount);
-
-CREATE INDEX idx_date_basket
-ON pos_transactions(end_date_time, basket_size);
 
 
 -- ============================================================
@@ -66,10 +66,20 @@ SELECT * FROM pos_operator_logs LIMIT 100;
 -- invest in and how to design the payment experience.
 -- ============================================================
 
-SELECT
-    COUNT(CASE WHEN t_cash THEN 1 END) AS cash_transactions,
-    COUNT(CASE WHEN t_card THEN 1 END) AS card_transactions
-FROM pos_transactions;
+
+with cte1 as ( select *,
+	case 
+		when t_card = 1 then 'card'
+		when t_cash = 1 then 'cash'
+        ELSE 'Unkonwn'
+	end as payment_method
+from pos_transactions)
+
+
+select payment_method,count(*) as no_of_transaction
+from cte1 
+group by payment_method;
+
 
 
 -- ============================================================
@@ -78,20 +88,18 @@ FROM pos_transactions;
 -- Higher average spend per payment type informs security
 -- arrangements and marketing decisions around payment methods.
 -- ============================================================
+with cte1 as ( select *,
+	case 
+		when t_card = 1 then 'card'
+		when t_cash = 1 then 'cash'
+        ELSE 'Unkonwn'
+	end as payment_method
+from pos_transactions)
 
-SELECT
-    AVG(CASE WHEN t_cash AND NOT t_card THEN amount END) AS avg_cash_spend,
-    AVG(CASE WHEN t_card AND NOT t_cash THEN amount END) AS avg_card_spend
-FROM pos_transactions;
 
--- Alternative: separate queries for clarity
-SELECT AVG(amount) AS avg_cash_spend
-FROM pos_transactions
-WHERE t_cash AND NOT t_card;
-
-SELECT AVG(amount) AS avg_card_spend
-FROM pos_transactions
-WHERE t_card AND NOT t_cash;
+select payment_method,AVG(amount) as avg_transaction
+from cte1 
+group by payment_method;
 
 
 -- ============================================================
@@ -106,20 +114,17 @@ WHERE t_card AND NOT t_cash;
 -- Working Sundays: 24 Feb (week 8), 31 Mar (week 13)
 -- Non-working Sundays: 17 Feb (week 7), 7 Apr (week 14) — will not appear in results
 
-SELECT
-    WEEK(end_date_time) AS week_num,
-    DATE(end_date_time) AS end_date
-FROM pos_transactions
-WHERE YEAR(end_date_time) >= 2019
-    AND DATE(end_date_time) IN (
-        '2019-02-24',
-        '2019-03-31',
-        '2019-02-17',
-        '2019-04-07'
-    )
-GROUP BY end_date
-ORDER BY end_date DESC;
+with cte2 as (
+			select * ,
+			dayname(end_date_time) as day_name,
+            weekofyear(end_date_time) as week_no
+            from pos_transactions
+            )
+select * from cte2            
 
+select distinct week_no
+from cte2  
+where day_name = 'Sunday'and year(end_date_time) >=2019;
 
 -- ============================================================
 -- TASK 5
@@ -130,70 +135,19 @@ ORDER BY end_date DESC;
 -- Median is calculated using ROW_NUMBER() window function.
 -- ============================================================
 
--- Daily sales trends with average basket size
-SELECT
-    WEEK(end_date_time) AS week_num,
-    DATE(end_date_time) AS end_date,
-    COUNT(id) AS total_transactions,
-    SUM(amount) AS total_sales,
-    AVG(amount) AS avg_sale_amount,
-    AVG(basket_size) AS avg_basket_size
-FROM pos_transactions
-WHERE YEAR(end_date_time) >= 2019
-GROUP BY DATE(end_date_time)
-ORDER BY week_num;
-
--- Median sale amount per day (custom MySQL implementation)
--- Uses ROW_NUMBER() to rank transactions by amount per day,
--- then selects the middle row(s) to find the true median.
-SELECT
-    end_date,
-    AVG(amount) AS median_sale_amount
-FROM (
-    SELECT
-        DATE(end_date_time) AS end_date,
-        amount,
-        ROW_NUMBER() OVER (
-            PARTITION BY DATE(end_date_time)
-            ORDER BY amount
-        ) AS row_num,
-        COUNT(*) OVER (
-            PARTITION BY DATE(end_date_time)
-        ) AS total_rows
+WITH cte3 AS (
+    SELECT *,
+           DATE(end_date_time) AS txn_date,
+           DAYNAME(end_date_time) AS day_name
     FROM pos_transactions
-    WHERE YEAR(end_date_time) >= 2019
-) ranked
-WHERE row_num IN (
-    FLOOR((total_rows + 1) / 2),
-    CEIL((total_rows + 1) / 2)
 )
-GROUP BY end_date
-ORDER BY end_date;
-
--- Median basket size per day (same approach)
 SELECT
-    end_date,
-    AVG(basket_size) AS median_basket_size
-FROM (
-    SELECT
-        DATE(end_date_time) AS end_date,
-        basket_size,
-        ROW_NUMBER() OVER (
-            PARTITION BY DATE(end_date_time)
-            ORDER BY basket_size
-        ) AS row_num,
-        COUNT(*) OVER (
-            PARTITION BY DATE(end_date_time)
-        ) AS total_rows
-    FROM pos_transactions
-    WHERE YEAR(end_date_time) >= 2019
-) ranked
-WHERE row_num IN (
-    FLOOR((total_rows + 1) / 2),
-    CEIL((total_rows + 1) / 2)
-)
-GROUP BY end_date
-ORDER BY end_date;
+    txn_date,day_name,
+    COUNT(id) AS no_transaction,
+    ROUND(SUM(amount),2) AS revenue,
+    ROUND(AVG(basket_size),2) AS avg_basket_size
+FROM cte3
+GROUP BY txn_date,day_name;
 
 
 -- ============================================================
@@ -205,17 +159,17 @@ ORDER BY end_date;
 -- or whether customers simply shift their spend to Saturday.
 -- ============================================================
 
-SELECT
-    WEEK(end_date_time) AS week_num,
-    SUM(amount) AS total_weekly_revenue
-FROM pos_transactions
-WHERE YEAR(end_date_time) >= 2019
-    AND WEEK(end_date_time) IN (8, 14)
-GROUP BY WEEK(end_date_time);
+with cte2 as (
+			select * ,
+			dayname(end_date_time) as day_name,
+            weekofyear(end_date_time) as week_no
+            from pos_transactions
+            )
 
--- Result: Both weeks generate PLN 1.7M — Sunday closure
--- has zero measurable impact on weekly revenue.
-
+select  week_no,day_name,round(sum(amount),3) as revenue
+from cte2 
+where week_no in(8,14) 
+group by week_no,day_name ;
 
 -- ============================================================
 -- TASK 7
@@ -225,17 +179,15 @@ GROUP BY WEEK(end_date_time);
 -- Counting operators per day gives us the staffing cost input.
 -- ============================================================
 
-SELECT
-    DATE(begin_date_time) AS working_day,
-    COUNT(DISTINCT operator_id) AS operators_on_shift,
-    WEEK(begin_date_time) AS week_num
-FROM pos_operator_logs
-WHERE YEAR(begin_date_time) >= 2019
-GROUP BY DATE(begin_date_time)
-ORDER BY working_day;
-
--- Result: 18 operators on Sunday 24 Feb, 20 on Sunday 31 Mar.
--- Estimated saving per Sunday:
+with cte4 as( select * ,
+			 date(begin_date_time) as date,
+             dayname(begin_date_time) as day_name,
+             weekofyear(begin_date_time) as week_no
+             from pos_operator_logs
+             )
+             select date,day_name,week_no, count(distinct operator_id) as no_of_operator_working_that_day
+             from cte4
+             group by date,day_name,week_no;
 -- ~19 staff (avg) x 8 hours x hourly rate = direct labor saving
 -- Multiply by ~52 Sundays per year for annual saving estimate.
 -- Additional savings: energy costs, system overhead, consumables.
